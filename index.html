@@ -558,6 +558,7 @@ function renderAuthScreen(){
   html += '</div>';
 
   html += '<p style="text-align:center;margin-top:-6px;"><a href="#" id="adminLinkBtn" style="font-size:.78rem;color:var(--text-muted);text-decoration:none;">⚙️ สำหรับผู้ดูแลระบบ</a></p>';
+  html += renderServerVersionNotice();
 
   app.innerHTML = html;
   bindAuthEvents();
@@ -1731,8 +1732,40 @@ function renderAdminAttemptsTable(card, attempts){
   });
 }
 
+// ---- server version check (helps diagnose "ยังไม่ได้ deploy โค้ดล่าสุด") ----
+var EXPECTED_SERVER_VERSION = 'v4-approval-gate-2026-08-16';
+var serverVersionInfo = { checked:false, ok:false, version:'' };
+function checkServerVersion(){
+  apiCall('ping', {}, function(err, data){
+    serverVersionInfo.checked = true;
+    if(!err && data && data.version){
+      serverVersionInfo.version = data.version;
+      serverVersionInfo.ok = (data.version === EXPECTED_SERVER_VERSION);
+    } else {
+      serverVersionInfo.version = '';
+      serverVersionInfo.ok = false;
+    }
+    // re-render the footer notice if we're still sitting on the auth screen
+    var el = document.getElementById('serverVersionNotice');
+    if(el){ el.outerHTML = renderServerVersionNotice(); }
+  });
+}
+function renderServerVersionNotice(){
+  if(!serverVersionInfo.checked){
+    return '<p id="serverVersionNotice" style="text-align:center;margin-top:6px;font-size:.72rem;color:var(--text-muted);">🔄 กำลังตรวจสอบเวอร์ชันเซิร์ฟเวอร์...</p>';
+  }
+  if(serverVersionInfo.ok){
+    return '<p id="serverVersionNotice" style="text-align:center;margin-top:6px;font-size:.72rem;color:#2e7d32;">✅ เซิร์ฟเวอร์เป็นโค้ดล่าสุด ('+escapeHtml(serverVersionInfo.version)+')</p>';
+  }
+  if(serverVersionInfo.version){
+    return '<p id="serverVersionNotice" style="text-align:center;margin-top:6px;font-size:.72rem;color:#c62828;">⚠️ เซิร์ฟเวอร์ยังเป็นโค้ดรุ่นเก่า (เจอเวอร์ชัน "'+escapeHtml(serverVersionInfo.version)+'" ต้องการ "'+EXPECTED_SERVER_VERSION+'") — กรุณาวาง Code.gs ล่าสุดแล้ว Deploy เวอร์ชันใหม่อีกครั้ง</p>';
+  }
+  return '<p id="serverVersionNotice" style="text-align:center;margin-top:6px;font-size:.72rem;color:#c62828;">⚠️ ตรวจสอบเวอร์ชันเซิร์ฟเวอร์ไม่ได้ — เชื่อมต่อเซิร์ฟเวอร์ไม่ได้ หรือโค้ดยังเก่ามากจนไม่รู้จัก action นี้</p>';
+}
+
 // ---- init ----
 renderAuthScreen();
+checkServerVersion();
 
 })();
 
