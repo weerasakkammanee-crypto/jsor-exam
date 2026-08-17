@@ -1776,7 +1776,7 @@ function renderAdminAttemptsTable(card, attempts){
 }
 
 // ---- server version check (helps diagnose "ยังไม่ได้ deploy โค้ดล่าสุด") ----
-var EXPECTED_SERVER_VERSION = 'v5-history-singlesession-2026-08-17';
+var EXPECTED_SERVER_VERSION = 'v6-fix-legacy-row-delete-2026-08-17';
 var serverVersionInfo = { checked:false, ok:false, version:'' };
 function checkServerVersion(){
   apiCall('ping', {}, function(err, data){
